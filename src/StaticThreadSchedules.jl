@@ -15,40 +15,32 @@ function _threadsfor(iter, lbody, schedule, cost_model)
         for i in $(esc(range))
             per_thread_cost += Float64($(esc(cost_model))(i))
         end
-        per_thread_cost /= nthreads()
+        per_thread_cost = per_thread_cost / nthreads() + 10eps()
+        # @show per_thread_cost
+        chunk_indices = zeros(Int, nthreads()+1)
+        current_chunk = 1
+        chunk_indices[1] = 1
+        accumulated_cost = 0.0
+        for i in $(esc(range))
+            # @show i, accumulated_cost
+            accumulated_cost += Float64($(esc(cost_model))(i))
+            if accumulated_cost > per_thread_cost
+                accumulated_cost -= per_thread_cost
+                current_chunk += 1
+                chunk_indices[current_chunk] = i
+            end
+        end
+        chunk_indices[end] = lastindex($(esc(range))) + 1
+        # @show chunk_indices
 
-        let this_cost=per_thread_cost, range = $(esc(range)), cost_model = $(esc(cost_model))
+        let range = $(esc(range)), chunks_ = chunk_indices
             function threadsfor_fun(onethread=false)
                 r = range # Load into local variable
-                model = cost_model
+                chunks = chunks_
                 tid = threadid()
 
-                # cumulative cost start and end, for this thread
-                first_cost = (tid - 1) * this_cost
-                last_cost = first_cost + this_cost
-
-                # compute this thread's iterations
-                f = firstindex(r)
-                cumulative_cost = 0.0
-                for i = r
-                    cumulative_cost += Float64(cost_model(i))
-                    if cumulative_cost > first_cost
-                        f = i
-                        break  # stop iterating when we pass the first cost we want
-                    end
-                end
-                l = f
-                if tid == nthreads()
-                    l = lastindex(r)
-                else
-                    for i = f:lastindex(r)
-                        cumulative_cost += Float64(cost_model(i))
-                        if cumulative_cost > last_cost
-                            l = i
-                            break  # stop iterating when we pass the last cost we want
-                        end
-                    end
-                end
+                f = chunks[tid]
+                l = chunks[tid+1]-1
 
                 # run this thread's iterations
                 for i = f:l

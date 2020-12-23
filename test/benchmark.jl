@@ -1,27 +1,35 @@
 using StaticThreadSchedules
 import ThreadPools: @qthreads
 
-f(x) = sleep(x^2/1e6)
+function f(n)
+    s = 0.0
+    for i in 1:2n
+        for j in 1:2n
+            s += Float64(exp(-i*j))
+        end
+    end
+end
 
 function default_behavior()
-    @threads :static for i in 1:200
+    @threads :static for i in 1:600
         f(i)
     end
 end
 
 function this_package()
-    @threads :static (i->i^2) for i in 1:200
+    @threads :static (i->i^2) for i in 1:600
         f(i)
     end
 end
 
 function threadpools()
-    @qthreads for i in 1:200
+    @qthreads for i in 1:600
         f(i)
     end
 end
 
 ##
-@time default_behavior()
-@time this_package()
-@time threadpools()
+using BenchmarkTools
+@btime default_behavior()
+@btime this_package()
+@btime threadpools()
