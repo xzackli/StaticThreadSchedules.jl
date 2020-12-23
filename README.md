@@ -1,7 +1,7 @@
 # StaticThreadSchedules
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://xzackli.github.io/StaticThreadSchedules.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://xzackli.github.io/StaticThreadSchedules.jl/dev)
+<!-- [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://xzackli.github.io/StaticThreadSchedules.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://xzackli.github.io/StaticThreadSchedules.jl/dev) -->
 [![Build Status](https://github.com/xzackli/StaticThreadSchedules.jl/workflows/CI/badge.svg)](https://github.com/xzackli/StaticThreadSchedules.jl/actions)
 [![Coverage](https://codecov.io/gh/xzackli/StaticThreadSchedules.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/xzackli/StaticThreadSchedules.jl)
 
@@ -24,4 +24,4 @@ print(v)
 
 Sometimes when you're computing something expensive, you might already know how the cost of a loop scales with iteration. For example, if you're filling in the upper triangle of a matrix by iterating over the rows and columns, then the number of relevant elements in a column scales linearly.
 
-This package exports `@threads :static [cost function]`, allowing one to specify the cost of loop iteration when passed an index. For example, mode-coupling matrices in CMB studies cost ~ `ℓ^3`, so each iteration of the outer loop costs ℓ^2. Then you can write `@threads :static (ℓ->ℓ^2) for ...` to balance the cost over threads evenly.
+This package exports `@threads :static [cost function]`, allowing one to specify the cost of loop iteration when passed an index. For example, computing the mode-coupling used in cosmology requires ~ `ℓ^3` operations, and each iteration of the outer loop costs `ℓ^2`. Then you can write `@threads :static (ℓ->ℓ^2) for ...` to balance the cost over threads evenly.
