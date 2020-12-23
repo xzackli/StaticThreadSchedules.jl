@@ -24,4 +24,17 @@ print(v)
 
 Sometimes when you're computing something expensive, you might already know how the cost of a loop scales with iteration. For example, if you're filling in the upper triangle of a matrix by iterating over the rows and columns, then the number of relevant elements in a column scales linearly.
 
-This package exports `@threads :static [cost function]`, allowing one to specify the cost of loop iteration when passed an index. For example, computing the mode-coupling used in cosmology requires ~ `ℓ^3` operations, and each iteration of the outer loop costs `ℓ^2`. Then you can write `@threads :static (ℓ->ℓ^2) for ...` to balance the cost over threads evenly.
+This package exports `@threads :static [cost function]`, allowing one to specify the cost of loop iteration when passed an index. For example, computing the mode-coupling matrix used in cosmology requires ~ `ℓ^3` operations, and each iteration of the outer loop costs `ℓ^2`. Then you can write `@threads :static (ℓ->ℓ^2) for ...` to balance the cost over threads evenly.
+
+You can also pass a function.
+```julia
+v = zeros(12)
+cost(x) = x^3
+@threads :static cost for i in 1:12
+    v[i] = Threads.threadid()
+end
+print(v)
+```
+```
+[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 3.0, 5.0, 6.0]
+```
