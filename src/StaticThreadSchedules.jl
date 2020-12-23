@@ -10,55 +10,57 @@ function _threadsfor(iter, lbody, schedule, cost_model)
 
     quote
         local threadsfor_fun
-        let range = $(esc(range))
+        let range = $(esc(range)), cost_model = $(esc(cost_model))
 
         # compute the normalization of the cost
         per_thread_cost = 0.0
         for i in range
-            per_thread_cost += Float64($(esc(cost_model))(i))
+            per_thread_cost += Float64(cost_model(i))
         end
         per_thread_cost /= nthreads()
 
-        function threadsfor_fun(onethread=false)
-            r = range  # Load into local variable
-            cost = per_thread_cost  # Load into local variable
+        let this_cost = per_thread_cost
+            function threadsfor_fun(onethread=false)
+                r = range # Load into local variable
+                model = cost_model
 
-            # divide loop iterations among threads
-            if onethread
-                tid = 1
-                f = firstindex(r)
-                l = lastindex(r)
-            else
-                tid = threadid()
+                # divide loop iterations among threads
+                if onethread
+                    tid = 1
+                    f = firstindex(r)
+                    l = lastindex(r)
+                else
+                    tid = threadid()
 
-                # cumulative cost start and end, for this thread
-                first_cost = (tid - 1) * cost
-                last_cost = first_cost + cost
+                    # cumulative cost start and end, for this thread
+                    first_cost = (tid - 1) * this_cost
+                    last_cost = first_cost + this_cost
 
-                # compute this thread's iterations
-                f = firstindex(r)
-                cumulative_cost = 0.0
-                for i = r
-                    cumulative_cost += Float64($(esc(cost_model))(i))
-                    if cumulative_cost > first_cost
-                        f = i
-                        break  # stop iterating when we pass the first cost we want
+                    # compute this thread's iterations
+                    f = firstindex(r)
+                    cumulative_cost = 0.0
+                    for i = r
+                        cumulative_cost += Float64(cost_model(i))
+                        if cumulative_cost > first_cost
+                            f = i
+                            break  # stop iterating when we pass the first cost we want
+                        end
+                    end
+                    l = f
+                    for i = f:lastindex(r)
+                        cumulative_cost += Float64(cost_model(i))
+                        if cumulative_cost > last_cost
+                            l = i
+                            break  # stop iterating when we pass the last cost we want
+                        end
                     end
                 end
-                l = f
-                for i = f:lastindex(r)
-                    cumulative_cost += Float64($(esc(cost_model))(i))
-                    if cumulative_cost > last_cost
-                        l = i
-                        break  # stop iterating when we pass the last cost we want
-                    end
-                end
-            end
 
-            # run this thread's iterations
-            for i = f:l
-                local $(esc(lidx)) = @inbounds r[i]
-                $(esc(lbody))
+                # run this thread's iterations
+                for i = f:l
+                    local $(esc(lidx)) = @inbounds r[i]
+                    $(esc(lbody))
+                end
             end
         end
         end
