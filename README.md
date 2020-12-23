@@ -3,7 +3,7 @@
 <!-- [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://xzackli.github.io/StaticThreadSchedules.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://xzackli.github.io/StaticThreadSchedules.jl/dev) -->
 [![Build Status](https://github.com/xzackli/StaticThreadSchedules.jl/workflows/CI/badge.svg)](https://github.com/xzackli/StaticThreadSchedules.jl/actions)
-[![Coverage](https://codecov.io/gh/xzackli/StaticThreadSchedules.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/xzackli/StaticThreadSchedules.jl)
+[![codecov](https://codecov.io/gh/xzackli/StaticThreadSchedules.jl/branch/main/graph/badge.svg?token=r6TClpl4l7)](https://codecov.io/gh/xzackli/StaticThreadSchedules.jl)
 
 This package extends `Threads.@threads` static scheduling to handle loops with different costs per iteration.
 
@@ -19,7 +19,7 @@ end
 print(v)
 ```
 ```
-[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+[1.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 5.0, 5.0, 6.0, 6.0]
 ```
 
 Sometimes when you're computing something expensive, you might already know how the cost of a loop scales with iteration. For example, if you're filling in the upper triangle of a matrix by iterating over the rows and columns, then the number of relevant elements in a column scales linearly.
